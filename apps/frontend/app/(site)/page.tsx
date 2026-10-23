@@ -18,12 +18,9 @@ export default async function HomePage() {
 
   return (
     <main className="flex-1">
-      <section className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-6 py-20 text-center">
-          <span className="border border-navy-200 bg-navy-50 px-3 py-1 text-xs font-medium text-navy-700">
-            Now hiring
-          </span>
-          <h1 className="mt-5 text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl">
+      <section className="relative overflow-hidden border-b border-zinc-200 bg-gradient-to-b from-navy-50 via-white to-white">
+        <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-6 py-20 text-center sm:py-24">
+          <h1 className="text-4xl font-bold tracking-tight text-navy-950 sm:text-6xl">
             Find your next opportunity.
           </h1>
           <p className="mt-4 max-w-xl text-lg text-zinc-600">
@@ -32,7 +29,7 @@ export default async function HomePage() {
           </p>
           <a
             href="#positions"
-            className="mt-7 inline-flex items-center bg-navy-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-700"
+            className="mt-7 inline-flex items-center rounded-xl bg-navy-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-navy-600/25 transition hover:-translate-y-0.5 hover:bg-navy-700"
           >
             Explore open positions
           </a>
@@ -50,7 +47,7 @@ export default async function HomePage() {
         </div>
 
         {loadError ? (
-          <div className="border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             We couldn&apos;t load the job list right now ({loadError}). Please
             try again later.
           </div>
@@ -68,7 +65,7 @@ export default async function HomePage() {
           </div>
         )}
 
-        <div className="mt-12 border border-zinc-200 bg-navy-50/50 px-6 py-5 text-center">
+        <div className="mt-12 rounded-2xl border border-zinc-200 bg-navy-50/60 px-6 py-5 text-center">
           <p className="text-sm text-zinc-600">
             Already applied?{" "}
             <Link href="/track" className="font-medium text-navy-700 hover:underline">

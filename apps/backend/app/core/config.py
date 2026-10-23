@@ -85,6 +85,8 @@ class Settings(BaseSettings):
     AUTO_EVALUATE_ON_APPLY: bool = True
     AUTO_REJECT_THRESHOLD: int = 40
     AUTO_REJECT_FLOOR: int = 20
+    # Leaderboard shows only strong matches: score at/above this (MATCH band).
+    TOP_CANDIDATE_SCORE: int = 70
     # Hard deadline for the LangGraph screening run in the auto path. A full
     # run is 7 sequential LLM nodes (plus a possible 14B second-pass), and on
     # CPU inference that can legitimately take several minutes, so the cap is

@@ -251,7 +251,7 @@ export default function JobsPage() {
             />
           </Field>
 
-          <div className="border border-navy-200 bg-navy-50/50 p-4">
+          <div className="rounded-xl border border-navy-200 bg-navy-50/50 p-4">
             <div className="flex items-center gap-2">
               <span className="flex h-6 w-6 items-center justify-center bg-navy-600 text-white">
                 <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -171,6 +171,26 @@ export default function ChatPage() {
     return () => clearInterval(timer);
   }, [selectedId, loadThread]);
 
+  // Whatever thread is open counts as read, including auto-selected chats and
+  // replies that arrive while the thread is on screen.
+  const hasUnreadInThread = thread.some(
+    (m) => m.direction === "INBOUND" && !m.read_at
+  );
+  useEffect(() => {
+    if (!selectedId || !hasUnreadInThread) return;
+    if (view !== "thread" && window.innerWidth < 1024) return;
+    void markConversationRead(selectedId)
+      .then(() => {
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.application_id === selectedId ? { ...c, unread: 0 } : c
+          )
+        );
+        return refreshUnread();
+      })
+      .catch(() => {});
+  }, [selectedId, hasUnreadInThread, view, refreshUnread]);
+
   useEffect(() => {
     if (selectedId && bottomRef.current) {
       bottomRef.current.scrollIntoView({ block: "end" });
@@ -391,10 +411,10 @@ export default function ChatPage() {
               return (
                 <div key={message.id} className="flex flex-col gap-1">
                   <div
-                    className={`max-w-[85%] whitespace-pre-wrap border px-4 py-3 text-sm shadow-sm ${
+                    className={`max-w-[85%] whitespace-pre-wrap rounded-2xl border px-4 py-3 text-sm shadow-sm ${
                       fromCandidate
-                        ? "self-start border-zinc-200 bg-white text-zinc-900"
-                        : "self-end border-navy-700 bg-navy-700 text-white"
+                        ? "self-start rounded-bl-md border-zinc-200 bg-white text-zinc-900"
+                        : "self-end rounded-br-md border-navy-600 bg-navy-600 text-white"
                     }`}
                   >
                     <p
@@ -463,17 +483,17 @@ export default function ChatPage() {
   return (
     <main className="mx-auto w-full max-w-7xl p-4 sm:p-6">
       {error ? (
-        <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-xl mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
       {notice ? (
-        <div className="mb-4 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div className="rounded-xl mb-4 border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
           {notice}
         </div>
       ) : null}
 
-      <div className="h-[calc(100dvh-16rem)] overflow-hidden border border-zinc-200 shadow-sm md:h-[calc(100dvh-12rem)] lg:h-[calc(100dvh-10rem)]">
+      <div className="h-[calc(100dvh-16rem)] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm md:h-[calc(100dvh-12rem)] lg:h-[calc(100dvh-10rem)]">
         {/* Desktop: two panes side by side */}
         <div className="hidden h-full md:grid md:grid-cols-[23rem_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)]">
           {listPane}

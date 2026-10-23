@@ -445,7 +445,7 @@ export default function ApplyForm({
 
   if (state.success) {
     return (
-      <div className="flex flex-col items-center border border-emerald-200 bg-emerald-50/50 px-6 py-10 text-center">
+      <div className="rounded-xl flex flex-col items-center border border-emerald-200 bg-emerald-50/50 px-6 py-10 text-center">
         <span className="flex h-12 w-12 items-center justify-center bg-emerald-500 text-white">
           <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
@@ -495,7 +495,7 @@ export default function ApplyForm({
               onFileChange={onFileChange}
             />
             {state.error ? (
-              <p className="border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
                 {state.error}
               </p>
             ) : null}
@@ -605,7 +605,7 @@ export default function ApplyForm({
                   {items.map((entry, index) => (
                     <div
                       key={index}
-                      className="grid gap-2 border border-zinc-200 bg-zinc-50/50 p-3 sm:grid-cols-3"
+                      className="rounded-xl grid gap-2 border border-zinc-200 bg-zinc-50/50 p-3 sm:grid-cols-3"
                     >
                       {def.fields.map((field) => (
                         <div
@@ -797,7 +797,7 @@ export default function ApplyForm({
             </label>
 
             {state.error ? (
-              <p className="border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
                 {state.error}
               </p>
             ) : null}

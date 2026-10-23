@@ -65,7 +65,7 @@ export default function FileUpload({
             setDragOver(false);
             select(event.dataTransfer.files);
           }}
-          className={`flex w-full flex-col items-center justify-center gap-2 border border-dashed px-6 py-10 text-center transition ${
+          className={`rounded-xl flex w-full flex-col items-center justify-center gap-2 border border-dashed px-6 py-10 text-center transition ${
             dragOver
               ? "border-navy-500 bg-navy-50"
               : "border-zinc-300 bg-white hover:border-navy-400 hover:bg-navy-50/40"
@@ -90,7 +90,7 @@ export default function FileUpload({
           <span className="text-xs text-zinc-400">PDF / DOCX / TXT</span>
         </button>
       ) : (
-        <div className="flex items-center justify-between gap-3 border border-zinc-200 bg-navy-50/50 px-4 py-3">
+        <div className="rounded-xl flex items-center justify-between gap-3 border border-zinc-200 bg-navy-50/50 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center bg-navy-600 text-white">
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -125,7 +125,7 @@ export default function FileUpload({
         </div>
       )}
       {sizeError ? (
-        <p className="border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
           {sizeError}
         </p>
       ) : null}

@@ -149,48 +149,73 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white">
-        <div className="flex h-14 items-center justify-between gap-4 px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center bg-navy-600 text-white">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84 50.633 50.633 0 0 0-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
-                </svg>
-              </span>
-              <span className="text-base font-bold tracking-tight text-zinc-900">
-                HR <span className="text-navy-600">OS</span>
-              </span>
-            </Link>
-            <span className="hidden text-sm text-zinc-400 sm:inline">
-              Recruitment console
-            </span>
-          </div>
+    <div className="min-h-screen bg-[var(--background)] lg:pl-64">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col bg-navy-950 text-navy-100 lg:flex">
+        <Link href="/dashboard" className="flex items-center gap-3 px-6 py-6">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-navy-400 to-navy-600 text-white shadow-lg shadow-navy-900/40">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84 50.633 50.633 0 0 0-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+            </svg>
+          </span>
+          <span>
+            <span className="block text-lg font-bold leading-none tracking-tight text-white">HR OS</span>
+            <span className="mt-1 block text-[11px] uppercase tracking-widest text-navy-300">Recruitment</span>
+          </span>
+        </Link>
 
-          <nav className="flex items-center gap-1 sm:gap-2">
-            {NAV.map((item) => {
-              const active = item.match(pathname);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`hidden items-center gap-2 px-3 py-1.5 text-sm font-medium transition md:flex ${
-                    active
-                      ? "bg-navy-50 text-navy-700"
-                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-                  }`}
-                >
-                  {item.label}
-                  {item.href === "/dashboard/chat" && unread > 0 ? (
-                    <span className="ml-1 rounded-full bg-navy-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
-                      {unread}
-                    </span>
-                  ) : null}
-                </Link>
-              );
-            })}
-          </nav>
+        <nav className="flex flex-1 flex-col gap-1 px-3">
+          {NAV.map((item) => {
+            const active = item.match(pathname);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                  active
+                    ? "bg-white/10 text-white shadow-inner"
+                    : "text-navy-200 hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                <span className={active ? "text-navy-300" : "text-navy-400"}>{item.icon}</span>
+                {item.label}
+                {item.href === "/dashboard/chat" && unread > 0 ? (
+                  <span className="ml-auto rounded-full bg-navy-500 px-2 py-0.5 text-[10px] font-semibold leading-none text-white">
+                    {unread}
+                  </span>
+                ) : null}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="m-3 rounded-2xl bg-white/5 p-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-500 text-xs font-semibold text-white">
+              {initials}
+            </span>
+            <div className="min-w-0 leading-tight">
+              <p className="truncate text-sm font-medium text-white">{user?.name}</p>
+              <p className="text-xs text-navy-300">{user?.role}</p>
+            </div>
+            <button
+              onClick={logout}
+              title="Sign out"
+              className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-navy-300 transition hover:bg-white/10 hover:text-white"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-white/80 backdrop-blur">
+        <div className="flex h-14 items-center justify-between gap-4 px-4 sm:px-6">
+          <Link href="/dashboard" className="text-base font-bold tracking-tight text-zinc-900 lg:hidden">
+            HR <span className="text-navy-600">OS</span>
+          </Link>
+          <span className="hidden text-sm text-zinc-400 lg:inline">Recruitment console</span>
 
           <div className="flex items-center gap-3">
             <Link
@@ -225,7 +250,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     onClick={() => setBellOpen(false)}
                     className="fixed inset-0 z-40 cursor-default"
                   />
-                  <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden border border-zinc-200 bg-white shadow-lg">
+                  <div className="absolute right-0 z-50 mt-2 w-80 rounded-2xl overflow-hidden border border-zinc-200 bg-white shadow-lg">
                     <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-2.5">
                       <p className="text-sm font-semibold text-zinc-900">
                         Notifications
@@ -279,19 +304,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </>
               ) : null}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center bg-navy-600 text-xs font-semibold text-white">
-                {initials}
-              </span>
-              <div className="hidden leading-tight lg:block">
-                <p className="text-sm font-medium text-zinc-900">{user?.name}</p>
-                <p className="text-xs text-zinc-400">{user?.role}</p>
-              </div>
-            </div>
             <button
               onClick={logout}
               title="Sign out"
-              className="flex h-8 w-8 items-center justify-center text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 lg:hidden"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
@@ -299,32 +315,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </div>
-        <div className="flex gap-1 overflow-x-auto border-t border-zinc-200 px-3 py-1.5 md:hidden">
+        <div className="flex gap-1 overflow-x-auto border-t border-[var(--border)] px-3 py-1.5 lg:hidden">
           {NAV.map((item) => {
             const active = item.match(pathname);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`whitespace-nowrap px-3 py-1.5 text-sm font-medium ${
-                  active
-                    ? "bg-navy-50 text-navy-700"
-                    : "text-zinc-600"
+                className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ${
+                  active ? "bg-navy-50 text-navy-700" : "text-zinc-600"
                 }`}
               >
-                  {item.label}
-                  {item.href === "/dashboard/chat" && unread > 0 ? (
-                    <span className="ml-1 rounded-full bg-navy-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
-                      {unread}
-                    </span>
-                  ) : null}
-                </Link>
-              );
-            })}
+                {item.label}
+                {item.href === "/dashboard/chat" && unread > 0 ? (
+                  <span className="ml-1 rounded-full bg-navy-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                    {unread}
+                  </span>
+                ) : null}
+              </Link>
+            );
+          })}
         </div>
       </header>
 
-      {children}
+      <div key={pathname} className="page-enter mx-auto w-full max-w-[1440px]">
+        {children}
+      </div>
     </div>
   );
 }

@@ -36,9 +36,9 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-navy-50 px-6 py-16">
+    <main className="flex flex-1 items-center justify-center bg-gradient-to-br from-navy-50 via-white to-navy-100 px-6 py-16">
       <div className="w-full max-w-sm">
-        <div className="relative border border-zinc-200 border-t-4 border-t-navy-600 bg-white p-8 shadow-md">
+        <div className="relative rounded-3xl border border-zinc-200 bg-white p-8 shadow-xl shadow-navy-900/5">
           <div className="mb-6 text-center">
             <Link href="/" className="text-2xl font-bold text-zinc-900">
               HR <span className="text-navy-600">OS</span>

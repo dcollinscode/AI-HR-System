@@ -73,8 +73,8 @@ function CvViewer({
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="flex shrink-0 items-center justify-between gap-3">
         <p className="min-w-0 truncate text-sm font-medium text-zinc-900">
           {fileName}
         </p>
@@ -99,7 +99,7 @@ function CvViewer({
       ) : null}
 
       {error ? (
-        <div className="flex flex-col items-center gap-3 border border-dashed border-zinc-300 bg-rose-50/50 px-6 py-14 text-center">
+        <div className="rounded-xl flex flex-col items-center gap-3 border border-dashed border-zinc-300 bg-rose-50/50 px-6 py-14 text-center">
           <p className="text-sm text-rose-700">{error}</p>
         </div>
       ) : null}
@@ -109,10 +109,10 @@ function CvViewer({
           <iframe
             src={readyUrl}
             title={fileName}
-            className="h-[60vh] w-full border border-zinc-200 bg-white"
+            className="min-h-0 w-full flex-1 rounded-xl border border-zinc-200 bg-white"
           />
         ) : (
-          <div className="flex flex-col items-center gap-3 border border-dashed border-zinc-300 bg-navy-50/50 px-6 py-14 text-center">
+          <div className="rounded-xl flex flex-col items-center gap-3 border border-dashed border-zinc-300 bg-navy-50/50 px-6 py-14 text-center">
             <p className="text-sm text-zinc-500">
               This file type cannot be previewed inline.
             </p>
@@ -140,7 +140,7 @@ export default function CvPreview({
   if (!open || !cvId) return null;
 
   return (
-    <Modal open={open} onClose={onClose} title="CV preview">
+    <Modal open={open} onClose={onClose} title="CV preview" size="full">
       <CvViewer
         key={cvId}
         cvId={cvId}

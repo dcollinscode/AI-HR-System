@@ -40,7 +40,7 @@ export default function JobBoard({ jobs }: { jobs: Job[] }) {
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search roles by title, skill or location"
           aria-label="Search open roles"
-          className="w-full border border-zinc-300 bg-white py-2 pl-9 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-navy-500 focus:outline-none focus:ring-1 focus:ring-navy-500"
+          className="w-full rounded-xl border border-zinc-300 bg-white py-2.5 pl-9 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400"
         />
       </div>
 
@@ -54,7 +54,7 @@ export default function JobBoard({ jobs }: { jobs: Job[] }) {
           </p>
         </div>
       ) : (
-        <div className="border border-zinc-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
           {visible.map((job) => (
             <JobCard key={job.id} job={job} />
           ))}

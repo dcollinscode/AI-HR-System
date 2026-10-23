@@ -196,9 +196,18 @@ def _draft_rejection_email(
 
 
 def rank_applications(
-    db: Session, job_id: uuid.UUID | None = None, limit: int = 10
+    db: Session,
+    job_id: uuid.UUID | None = None,
+    limit: int = 10,
+    *,
+    min_score: float | None = None,
+    exclude_rejected: bool = False,
 ) -> list[dict]:
-    """Return applications ordered by latest AI screening score (desc)."""
+    """Return applications ordered by latest AI screening score (desc).
+
+    ``min_score`` keeps only candidates scoring at/above it (unscored ones are
+    dropped); ``exclude_rejected`` hides REJECTED applications. Ties go to the
+    earlier applicant."""
     from app.db.models.application import ApplicationStatusHistory
 
     query = db.query(Application)
@@ -248,9 +257,15 @@ def rank_applications(
             }
         )
 
+    if exclude_rejected:
+        ranked = [a for a in ranked if a["status"] != ApplicationStatus.REJECTED.value]
     scored = [a for a in ranked if a["score"] is not None]
     unsorted = [a for a in ranked if a["score"] is None]
+    # Highest score first; equal scores -> earlier applicant first.
+    scored.sort(key=lambda a: a["created_at"] or "")
     scored.sort(key=lambda a: a["score"], reverse=True)
+    if min_score is not None:
+        return [a for a in scored if a["score"] >= min_score][:limit]
     ranked = scored + unsorted
     return ranked[:limit]
 

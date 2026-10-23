@@ -47,7 +47,7 @@ export default async function JobDetailPage({
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-zinc-500">
             {job.location ? <span>{job.location}</span> : null}
             {salary ? (
-              <span className="border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-700">
+              <span className="rounded-xl border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-700">
                 {salary}
               </span>
             ) : null}

@@ -8,7 +8,7 @@ export default function ErrorState({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center border border-rose-200 bg-rose-50/50 px-6 py-12 text-center">
+    <div className="rounded-xl flex flex-col items-center border border-rose-200 bg-rose-50/50 px-6 py-12 text-center">
       <span className="flex h-10 w-10 items-center justify-center bg-rose-500 text-white">
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path

@@ -296,8 +296,8 @@ export default function CandidatesPage() {
       {view === "ranked" ? (
         ranked.length === 0 ? (
           <EmptyState
-            title="No evaluated candidates for this job"
-            description="As candidates apply, they are scored against the job and the best matches appear here."
+            title="No top candidates for this job yet"
+            description="Only strong matches (score 70+) appear here. Everyone else with a score of 40+ is under All applications."
           />
         ) : visibleRanked.length === 0 ? (
           <EmptyState

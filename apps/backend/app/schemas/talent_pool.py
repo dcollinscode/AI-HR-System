@@ -24,9 +24,21 @@ class TalentPoolOut(BaseModel):
     updated_at: datetime
 
 
+class TalentPoolJobMatch(BaseModel):
+    job_id: uuid.UUID
+    job_title: str
+    matched_skills: list[str] = []
+    score: float = 0.0
+
+
 class TalentPoolCandidateOut(TalentPoolOut):
     candidate_name: str | None = None
     candidate_email: str | None = None
+    # Every skill on the candidate's profile (kept for searching).
+    skills: list[str] = []
+    # Only the skills that matter for currently OPEN jobs, best job first.
+    relevant_skills: list[str] = []
+    matching_jobs: list[TalentPoolJobMatch] = []
 
 
 class TalentPoolStatusUpdate(BaseModel):

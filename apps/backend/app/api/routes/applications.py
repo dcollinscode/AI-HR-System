@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.config import settings
 
@@ -89,18 +89,69 @@ def list_applications(
     return items
 
 
+@router.get("/details", response_model=list[ApplicationDetail])
+def list_application_details(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_hr_or_admin),
+    score_min: float | None = None,
+    include_deleted: bool = False,
+    deleted_only: bool = False,
+):
+    """Bulk variant of ``GET /applications/{id}``: one query round-trip instead
+    of one request per application."""
+    query = (
+        db.query(Application)
+        .options(
+            selectinload(Application.candidate),
+            selectinload(Application.job),
+            selectinload(Application.cv_documents),
+            selectinload(Application.screening_results),
+            selectinload(Application.status_history),
+            selectinload(Application.interviews),
+            selectinload(Application.interview_requests),
+        )
+        .order_by(Application.created_at.desc())
+    )
+    if deleted_only:
+        query = query.filter(Application.deleted_at.is_not(None))
+    elif not include_deleted:
+        query = query.filter(Application.deleted_at.is_(None))
+    applications = query.all()
+    if score_min is not None:
+        applications = [
+            a
+            for a in applications
+            if (s := _latest_screening(a)) is not None
+            and s.score is not None
+            and float(s.score) >= score_min
+        ]
+    return [_to_detail(a) for a in applications]
+
+
 @router.get("/ranked")
 def list_ranked_applications(
     db: Session = Depends(get_db),
     _: User = Depends(require_hr_or_admin),
     job_id: uuid.UUID | None = None,
     limit: int = 10,
+    min_score: float | None = None,
+    include_rejected: bool = False,
 ):
+    """Leaderboard of the best candidates: by default only scores at/above
+    ``TOP_CANDIDATE_SCORE`` and never rejected applications."""
     from app.services import evaluation_service
 
+    if min_score is None:
+        min_score = settings.TOP_CANDIDATE_SCORE
     if limit < 1 or limit > 500:
         raise HTTPException(status_code=400, detail="limit must be between 1 and 500")
-    return evaluation_service.rank_applications(db, job_id=job_id, limit=limit)
+    return evaluation_service.rank_applications(
+        db,
+        job_id=job_id,
+        limit=limit,
+        min_score=min_score,
+        exclude_rejected=not include_rejected,
+    )
 
 
 @router.get("/{application_id}", response_model=ApplicationDetail)

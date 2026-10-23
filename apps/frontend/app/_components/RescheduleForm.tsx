@@ -69,7 +69,7 @@ export default function RescheduleForm({
 
   if (view.already_rescheduled) {
     return (
-      <div className="border border-emerald-200 bg-emerald-50 p-6 text-sm text-emerald-800">
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-sm text-emerald-800">
         This interview has already been handled. Check your email for your
         updated interview time.
       </div>

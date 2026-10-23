@@ -22,6 +22,7 @@ from app.db.models.job import Job
 from app.db.models.talent_pool import TalentPool
 from app.db.models.talent_pool_invite import TalentPoolInvite
 from app.services import settings_service
+from app.services.skill_matching import candidate_skills, match_skills
 from app.services.email_service import record_email
 from app.utils.tokens import generate_secure_token, hash_token
 
@@ -78,6 +79,7 @@ def _invite_email_parts(
     company_name: str,
     hr_name: str,
     link: str,
+    matched_skills: list[str] | None = None,
 ) -> tuple[str, str]:
     first = (candidate_name or "there").strip().split()[0]
     valid_days = settings.TALENT_POOL_INVITE_DAYS
@@ -101,6 +103,9 @@ def _invite_email_parts(
             f"We're hiring for the role of {job_title}, and based on your "
             "experience we'd love you to apply."
         )
+    if matched_skills:
+        shown = ", ".join(matched_skills[:5])
+        lines += ["", f"Your skills in {shown} are a strong fit for this role."]
     lines += [
         "",
         "Use the link below to update your CV (or confirm your latest one) and "
@@ -171,14 +176,34 @@ def send_job_invites(job_id: uuid.UUID) -> dict:
         company_name, hr_name, _ = settings_service.org_identity(db)
         invited = 0
         now = datetime.now(timezone.utc)
+
+        # Rank by skill fit so the best-matching candidates are invited first.
+        # A candidate qualifies on skills; one with no skills on file falls back
+        # to the job-title match.
+        shortlisted = []
         for entry in entries:
             candidate = entry.candidate
             if candidate is None or not candidate.email:
                 continue
             if candidate.id in applied_ids or candidate.id in invited_ids:
                 continue
-            if _title_match_score(job.title, candidate) < TITLE_MATCH_MIN:
-                continue
+            skills = match_skills(
+                job_title=job.title,
+                job_description=job.description,
+                job_requirements=job.requirements,
+                profile=candidate.profile_data,
+            )
+            if skills.qualifies:
+                shortlisted.append((skills.score, entry, skills.matched))
+            elif (
+                not candidate_skills(candidate.profile_data)
+                and _title_match_score(job.title, candidate) >= TITLE_MATCH_MIN
+            ):
+                shortlisted.append((0.0, entry, []))
+        shortlisted.sort(key=lambda row: row[0], reverse=True)
+
+        for _, entry, matched_skills in shortlisted:
+            candidate = entry.candidate
             try:
                 raw_token = generate_secure_token()
                 invite = TalentPoolInvite(
@@ -197,6 +222,7 @@ def send_job_invites(job_id: uuid.UUID) -> dict:
                     company_name,
                     hr_name,
                     link,
+                    matched_skills,
                 )
                 record_email(
                     db,

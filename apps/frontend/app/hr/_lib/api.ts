@@ -229,6 +229,16 @@ export type TalentPoolEntry = {
   updated_at: string;
   candidate_name: string | null;
   candidate_email: string | null;
+  skills: string[];
+  relevant_skills: string[];
+  matching_jobs: TalentPoolJobMatch[];
+};
+
+export type TalentPoolJobMatch = {
+  job_id: string;
+  job_title: string;
+  matched_skills: string[];
+  score: number;
 };
 
 export type TalentPoolMatch = {
@@ -264,28 +274,11 @@ export async function getApplicationDetails(
   scoreMin?: number
 ): Promise<ApplicationDetail[]> {
   const query = scoreMin === undefined ? "" : `?score_min=${scoreMin}`;
-  const summaries = await api<ApplicationSummary[]>(`/applications${query}`);
-  const details = await Promise.all(
-    summaries.map((app) =>
-      api<ApplicationDetail>(`/applications/${app.id}`).catch(() => null)
-    )
-  );
-  return details.filter((d): d is ApplicationDetail => d !== null);
+  return api<ApplicationDetail[]>(`/applications/details${query}`);
 }
 
 export async function getDeletedApplications(): Promise<ApplicationDetail[]> {
-  const summaries = await api<ApplicationSummary[]>(
-    "/applications?include_deleted=true"
-  );
-  const deleted = summaries.filter((app) => app.deleted_at !== null);
-  const details = await Promise.all(
-    deleted.map((app) =>
-      api<ApplicationDetail>(`/applications/${app.id}?include_deleted=true`).catch(
-        () => null
-      )
-    )
-  );
-  return details.filter((d): d is ApplicationDetail => d !== null);
+  return api<ApplicationDetail[]>("/applications/details?deleted_only=true");
 }
 
 export async function deleteApplication(

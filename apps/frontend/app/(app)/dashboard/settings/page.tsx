@@ -137,7 +137,7 @@ export default function SettingsPage() {
 
           {error ? <ErrorNote message={error} /> : null}
           {notice ? (
-            <p className="border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
               {notice}
             </p>
           ) : null}

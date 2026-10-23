@@ -153,11 +153,16 @@ def unread_count(
     db: Session = Depends(get_db),
     _: User = Depends(require_hr_or_admin),
 ):
+    # Only count messages that appear in a visible conversation; otherwise the
+    # badge can show unread mail that can never be opened and cleared.
     total = (
         db.query(Email)
+        .join(Application, Application.id == Email.application_id)
         .filter(
             Email.direction == EmailDirection.INBOUND,
             Email.read_at.is_(None),
+            Application.deleted_at.is_(None),
+            Application.candidate_id.isnot(None),
         )
         .count()
     )

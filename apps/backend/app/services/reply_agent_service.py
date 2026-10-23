@@ -42,6 +42,8 @@ from app.db.models.enums import (
 from app.db.models.interview import Interview, InterviewRequest
 from app.services import audit_service as audit
 from app.services import email_agent_service
+from app.services import reply_intents
+from app.services import settings_service
 from app.services.email_service import record_email
 from app.services.interview_service import as_utc, create_slot_request
 from app.services.slot_parser import build_proposed_at, extract_requested_slot
@@ -336,6 +338,172 @@ def _clean_query(text: str | None) -> str:
     return cleaned or (text or "").strip()
 
 
+def _signoff(db: Session) -> str:
+    try:
+        company, hr_name, _ = settings_service.org_identity(db)
+    except Exception:
+        company, hr_name = settings.COMPANY_NAME, settings.HR_NAME
+    lines = ["Best regards,", hr_name or "HR Team"]
+    if company:
+        lines.append(company)
+    return "\n".join(lines)
+
+
+def _pick_application(
+    db: Session, candidate: Candidate, subject: str | None
+) -> Application | None:
+    """The application a message is about: prefer the one whose job title is
+    named in the subject, else the candidate's most recent one."""
+    apps = (
+        db.query(Application)
+        .filter(
+            Application.candidate_id == candidate.id,
+            Application.deleted_at.is_(None),
+        )
+        .order_by(Application.created_at.desc())
+        .all()
+    )
+    subject_l = (subject or "").lower()
+    if subject_l:
+        for app in apps:
+            title = (app.job.title if app.job else "") or ""
+            if title and title.lower() in subject_l:
+                return app
+    return apps[0] if apps else None
+
+
+def _flag_for_hr(
+    db: Session,
+    application: Application | None,
+    candidate: Candidate,
+    kind: str,
+    query: str,
+) -> None:
+    """Leave an audit trail entry HR can act on (withdrawals, sensitive topics)."""
+    audit.log_action(
+        db,
+        user_id=None,
+        action=f"reply.{kind}",
+        entity_type="application" if application else "candidate",
+        entity_id=application.id if application else candidate.id,
+        new_value={
+            "candidate": candidate.full_name,
+            "message": query[:500],
+            "flagged_at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+
+
+def _send_template_reply(
+    db: Session,
+    *,
+    application: Application | None,
+    candidate: Candidate,
+    subject: str | None,
+    body: str,
+    interview: Interview | None,
+) -> Email:
+    reply_subject = (subject or "").strip() or "Your application"
+    if not reply_subject.lower().startswith(("re:", "re ")):
+        reply_subject = f"Re: {reply_subject}"
+    return record_email(
+        db,
+        application_id=application.id if application else None,
+        email_type=EmailType.REPLY,
+        recipient=candidate.email,
+        subject=reply_subject,
+        body=_append_reschedule_link(body, interview),
+        send=True,
+    )
+
+
+def _route_known_intent(
+    db: Session,
+    *,
+    intent: str,
+    application: Application | None,
+    interview: Interview | None,
+    candidate: Candidate,
+    subject: str | None,
+    query: str,
+    job_title: str | None,
+) -> dict | None:
+    """Handle intents with a known-correct answer; None means "ask the AI"."""
+    name = candidate.full_name or "there"
+    role = job_title or "the position"
+    signoff = _signoff(db)
+    result = {
+        "candidate_name": candidate.full_name,
+        "application_id": str(application.id) if application else None,
+        "interview_id": str(interview.id) if interview else None,
+        "intent": intent,
+    }
+
+    if intent == reply_intents.THANKS:
+        db.commit()
+        return {**result, "note": "Courtesy message - recorded, no reply needed."}
+
+    body: str | None = None
+    note = "Reply sent to the candidate."
+    if intent == reply_intents.CONFIRM and interview is not None:
+        stamp = datetime.now(timezone.utc).isoformat()
+        line = f"[auto] Candidate confirmed attendance by email at {stamp}."
+        interview.notes = f"{interview.notes}\n{line}" if interview.notes else line
+        body = (
+            f"Dear {name},\n\nThank you for confirming. We look forward to meeting you "
+            f"on {_format_when(interview.scheduled_at)} for {role}.\n\n{signoff}"
+        )
+        note = "Attendance confirmed by the candidate."
+    elif intent == reply_intents.STATUS:
+        status = application.status.value if application else None
+        track_line = f"You can follow your application any time at {settings.PUBLIC_BASE_URL.rstrip('/')}/track"
+        if application:
+            track_line += f" using your Application ID {application.application_id}."
+        else:
+            track_line += "."
+        body = (
+            f"Dear {name},\n\nThank you for checking in about {role}. "
+            f"{reply_intents.status_sentence(status)}\n\n{track_line}\n\n{signoff}"
+        )
+        note = "Status question answered from the application record."
+    elif intent == reply_intents.WITHDRAW:
+        _flag_for_hr(db, application, candidate, "withdrawal_request", query)
+        body = (
+            f"Dear {name},\n\nWe have received your message and understand. We have "
+            f"passed your request regarding {role} to our hiring team, who will "
+            "confirm it with you shortly. Thank you for your time and interest.\n\n"
+            f"{signoff}"
+        )
+        note = "Withdrawal request flagged for HR."
+    elif intent == reply_intents.ESCALATE:
+        _flag_for_hr(db, application, candidate, "needs_hr", query)
+        body = (
+            f"Dear {name},\n\nThank you for your message. This is something our hiring "
+            "team needs to answer personally, so we have forwarded it to them. "
+            f"You will hear back from a team member soon.\n\n{signoff}"
+        )
+        note = "Sensitive topic forwarded to HR - no AI answer."
+    if body is None:
+        return None
+
+    email = _send_template_reply(
+        db,
+        application=application,
+        candidate=candidate,
+        subject=subject,
+        body=body,
+        interview=interview if intent == reply_intents.CONFIRM else None,
+    )
+    db.commit()
+    return {
+        **result,
+        "note": note,
+        "email_id": str(email.id),
+        "subject": email.subject,
+        "body": email.body,
+    }
+
+
 def handle_reply(
     db: Session,
     *,
@@ -377,15 +545,7 @@ def handle_reply(
     )
     application = interview.application if interview else None
     if application is None:
-        application = (
-            db.query(Application)
-            .filter(
-                Application.candidate_id == candidate.id,
-                Application.deleted_at.is_(None),
-            )
-            .order_by(Application.created_at.desc())
-            .first()
-        )
+        application = _pick_application(db, candidate, subject)
 
     clean_text = _clean_query(text)
 
@@ -434,6 +594,27 @@ def handle_reply(
         )
         if handled:
             return handled
+
+    intent = reply_intents.classify_reply(
+        query, has_interview=interview is not None
+    )
+    routed = _route_known_intent(
+        db,
+        intent=intent,
+        application=application,
+        interview=interview,
+        candidate=candidate,
+        subject=subject,
+        query=query,
+        job_title=job_title,
+    )
+    if routed is not None:
+        return routed
+
+    if application is not None:
+        context["APPLICATION_STATUS"] = reply_intents.status_sentence(
+            application.status.value
+        )
 
     draft = email_agent_service.draft_email(
         email_type="REPLY",
